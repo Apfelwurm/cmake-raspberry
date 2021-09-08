@@ -1,5 +1,4 @@
 name: cmake_raspberry_build
-runs-on: self-hosted
 
 on:
   push:

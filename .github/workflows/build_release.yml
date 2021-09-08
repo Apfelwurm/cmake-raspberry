@@ -36,14 +36,6 @@ jobs:
         copy_artifact_path: 'cmake_*_armhf.deb'
         commands: |
           echo hallo
-          sudo apt-get update -y
-          sudo apt-get install --no-install-recommends -y libconfuse-dev liblo-dev build-essential wget libssl-dev checkinstall
-          wget https://github.com/Kitware/CMake/releases/download/v3.21.2/cmake-3.21.2.tar.gz
-          tar xzf cmake-3.21.2.tar.gz
-          cd cmake-3.21.2
-          sudo ./bootstrap -- -DCMAKE_BUILD_TYPE:STRING=Release
-          sudo make
-          sudo checkinstall -y -D make install
     - name: 'Upload Artifact'
       uses: actions/upload-artifact@v2
       with:

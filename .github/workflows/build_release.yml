@@ -22,7 +22,7 @@ jobs:
   build:
     runs-on: self-hosted
     steps:
-    # - uses: AutoModality/action-clean@v1
+    - uses: AutoModality/action-clean@v1
     - name: checkout
       uses: actions/checkout@v2
     - name: Run arm build
@@ -35,13 +35,22 @@ jobs:
         optimize_image: no
         copy_artifact_path: 'cmake_*_armhf.deb'
         commands: |
-          echo hallo
+          sudo apt-get update -y
+          sudo apt-get install --no-install-recommends -y libconfuse-dev liblo-dev build-essential wget libssl-dev checkinstall
+          wget https://github.com/Kitware/CMake/releases/download/v3.21.2/cmake-3.21.2.tar.gz
+          tar xzf cmake-3.21.2.tar.gz
+          cd cmake-3.21.2
+          sudo ./bootstrap -- -DCMAKE_BUILD_TYPE:STRING=Release
+          sudo make -j$(nproc) 
+          sudo checkinstall -y -D make install
     - name: 'Upload Artifact'
       uses: actions/upload-artifact@v2
       with:
         name: cmake
         path: cmake_*_armhf.deb
         retention-days: 1
+
+
 
 
     # - name: make release

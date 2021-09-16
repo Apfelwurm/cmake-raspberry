@@ -1,0 +1,79 @@
+name: cmake_raspberry_build_arm1176
+
+on:
+  schedule:
+    # * is a special character in YAML so you have to quote this string
+    - cron:  '30 14 * * *'
+  push:
+    branches: 
+    - main
+    tags: [ v**]
+    paths:
+    - '**'
+    - '!Docs/**'
+    - '!README.md'
+  pull_request:
+    branches: 
+    - main
+    tags: [ v**]
+    paths:
+    - '**'
+    - '!Docs/**'
+    - '!README.md'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: AutoModality/action-clean@v1
+    - name: checkout
+      uses: actions/checkout@v2
+    - name: install lastversion
+      run: sudo apt-get update -y; sudo apt-get install --no-install-recommends -y python3 python3-pip; pip install lastversion
+    - name: check cmake lastversion
+      id: cmake_version
+      run: echo "::set-output name=version::$(lastversion https://github.com/Kitware/CMake)"    
+    - name: check local cmake lastversion
+      id: local_cmake_version 
+      run: echo "::set-output name=version::$(lastversion https://github.com/Apfelwurm/cmake-raspberry)"  
+    - name: create buildversion
+      if: ${{ steps.cmake_version.outputs.version != steps.local_cmake_version.outputs.version }}
+      run: echo "${{ steps.cmake_version.outputs.version }}" >> buildversion
+    - name: Run arm1176 build
+      uses: pguyot/arm-runner-action@v1
+      if: ${{ steps.cmake_version.outputs.version != steps.local_cmake_version.outputs.version }}
+      id: arm_runner_tests
+      with:
+        image_additional_mb: 4096
+        base_image: 'raspios_lite:2021-05-07'
+        cpu: 'arm1176'
+        optimize_image: no
+        copy_artifact_path: 'cmake_*_armhf_arm1176.deb'
+        commands: |
+          sudo apt-get update -y
+          sudo apt-get install --no-install-recommends -y libconfuse-dev liblo-dev build-essential wget libssl-dev checkinstall
+          version=$(cat buildversion)
+          wget https://github.com/Kitware/CMake/releases/download/v$version/cmake-$version.tar.gz
+          tar xzf cmake-$version.tar.gz
+          cd cmake-$version
+          sudo ./bootstrap --parallel=$(nproc) -- -DCMAKE_BUILD_TYPE:STRING=Release
+          sudo make -j$(nproc) 
+          sudo checkinstall -y -D make install
+          sudo mv cmake_$version-1_armhf.deb ../cmake_$version-1_armhf_arm1176.deb
+    - name: 'Upload Artifact'
+      uses: actions/upload-artifact@v2
+      if: ${{ steps.cmake_version.outputs.version != steps.local_cmake_version.outputs.version }}
+      with:
+        name: cmake
+        path: cmake_*_armhf_arm1176.deb
+        retention-days: 1
+    - name: make release
+      if: ${{ steps.cmake_version.outputs.version != steps.local_cmake_version.outputs.version }}
+      uses: softprops/action-gh-release@v1
+      with:
+        name: ${{ steps.cmake_version.outputs.version }}
+        tag_name: ${{ steps.cmake_version.outputs.version }}
+        files: |
+          ./cmake_*_armhf_arm1176.deb
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}   

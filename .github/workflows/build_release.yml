@@ -37,12 +37,14 @@ jobs:
         commands: |
           sudo apt-get update -y
           sudo apt-get install --no-install-recommends -y libconfuse-dev liblo-dev build-essential wget libssl-dev checkinstall
-          wget https://github.com/Kitware/CMake/releases/download/v3.21.2/cmake-3.21.2.tar.gz
-          tar xzf cmake-3.21.2.tar.gz
-          cd cmake-3.21.2
+          version=$(cat buildversion)
+          wget https://github.com/Kitware/CMake/releases/download/v$version/cmake-$version.tar.gz
+          tar xzf cmake-$version.tar.gz
+          cd cmake-$version
           sudo ./bootstrap -- -DCMAKE_BUILD_TYPE:STRING=Release
           sudo make -j$(nproc) 
           sudo checkinstall -y -D make install
+          sudo mv cmake_*_armhf.deb ../
     - name: 'Upload Artifact'
       uses: actions/upload-artifact@v2
       with:

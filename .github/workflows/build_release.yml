@@ -41,8 +41,8 @@ jobs:
           wget https://github.com/Kitware/CMake/releases/download/v$version/cmake-$version.tar.gz
           tar xzf cmake-$version.tar.gz
           cd cmake-$version
-          sudo ./bootstrap -- -DCMAKE_BUILD_TYPE:STRING=Release
-          sudo make -j$(nproc) 
+          sudo ./bootstrap --parallel=100 -- -DCMAKE_BUILD_TYPE:STRING=Release
+          sudo make -j10 
           sudo checkinstall -y -D make install
           sudo mv cmake_*_armhf.deb ../
     - name: 'Upload Artifact'

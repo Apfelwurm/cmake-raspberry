@@ -4,3 +4,4 @@ This repository houses newer cmake builds for the raspberry pi (armhf). It is in
 
 If the newest version is not available here, the automatic action might be disabled due to missing activity in this repository. To trigger the build you can simply open a PR with any content and come back around 4 hours later.
 
+run
